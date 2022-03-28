@@ -7,13 +7,18 @@ import torch.nn as nn
 
 
 
-def create_classification_dataset(window_size, data_dir, batch_size):
+def create_classification_dataset(window_size, train_x, train_y, test_x, test_y, batch_size):
     # data_dir에 있는 train/test 데이터 불러오기
-    x = pickle.load(open(os.path.join(data_dir, 'x_train.pkl'), 'rb'))
-    y = pickle.load(open(os.path.join(data_dir, 'state_train.pkl'), 'rb'))
-    x_test = pickle.load(open(os.path.join(data_dir, 'x_test.pkl'), 'rb'))
-    y_test = pickle.load(open(os.path.join(data_dir, 'state_test.pkl'), 'rb'))
+    # x = pickle.load(open(os.path.join(data_dir, 'x_train.pkl'), 'rb'))
+    # y = pickle.load(open(os.path.join(data_dir, 'state_train.pkl'), 'rb'))
+    # x_test = pickle.load(open(os.path.join(data_dir, 'x_test.pkl'), 'rb'))
+    # y_test = pickle.load(open(os.path.join(data_dir, 'state_test.pkl'), 'rb'))
 
+    x = train_x
+    y = train_y
+    x_test = test_x
+    y_test = test_y
+    
     # train data를 시간순으로 8:2의 비율로 train/validation set으로 분할
     n_train = int(0.8 * len(x))
     n_valid = len(x) - n_train

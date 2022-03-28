@@ -1,6 +1,9 @@
 import time
 import copy
-from models.RNN import RNN_model
+from models.CNN.main import CNN_1D
+from models.RNN.main import RNN_model
+from models.FC_Layer.main import FC_Layer
+
 from dataloader import create_classification_dataset
 import numpy as np
 
@@ -10,11 +13,15 @@ import torch.optim as optim
 
 
 class Train_Test():
-    def __init__(self, config):
+    def __init__(self, config, train_x, train_y, test_x, test_y):
+            self.with_representation = config['with_representation']
             self.algorithm = config['algorithm']
             self.alg_parameter = config['alg_parameter']
-
-
+            self.train_x = train_x
+            self.train_y = train_y
+            self.test_x = test_x
+            self.test_y = test_y
+            
     def train(self, model, dataloaders, criterion, num_epochs, optimizer):
         since = time.time()
 
@@ -95,18 +102,60 @@ class Train_Test():
 
 
     def get_accuracy(self):
-        if self.algorithm == 'LSTM':
-            model = RNN_model(input_size = 561, hidden_size = self.alg_parameter['hidden_size'],
-                              num_layers = self.alg_parameter['num_layers'], num_classes = 6, bidirectional = self.alg_parameter['bidirectional'], 
-                              rnn_type='lstm')
+        input_size = (self.train_x).shape[1]
+        num_classes = len(np.unique(self.train_y))
 
-        # if self.algorithm == 'GRU':
-        #     model = RNN_model(input_size = 561, hidden_size = self.alg_parameter['hidden_size'],
-        #                       num_layers = self.alg_parameter['num_layers'], num_classes = 6, bidirectional = self.alg_parameter['bidirectional'], 
-        #                       rnn_type='gru')
+        # representation feauture 유무 및 사용 알고리즘 모델 선언
+        if self.with_representation == False:
+            if self.algorithm == 'RNN':
+                model = RNN_model(input_size = input_size, 
+                                hidden_size = self.alg_parameter['hidden_size'],
+                                num_layers = self.alg_parameter['num_layers'], 
+                                num_classes = num_classes, 
+                                bidirectional = self.alg_parameter['bidirectional'], 
+                                rnn_type='rnn',
+                                device = self.alg_parameter['device'])
+                        
 
+            elif self.algorithm == 'LSTM':
+                model = RNN_model(input_size = input_size, 
+                                hidden_size = self.alg_parameter['hidden_size'],
+                                num_layers = self.alg_parameter['num_layers'], 
+                                num_classes = num_classes, 
+                                bidirectional = self.alg_parameter['bidirectional'], 
+                                rnn_type='lstm',
+                                device = self.alg_parameter['device'])
+
+            elif self.algorithm == 'GRU':
+                model = RNN_model(input_size = input_size, 
+                                hidden_size = self.alg_parameter['hidden_size'],
+                                num_layers = self.alg_parameter['num_layers'], 
+                                num_classes = num_classes, 
+                                bidirectional = self.alg_parameter['bidirectional'], 
+                                rnn_type='gru',
+                                device = self.alg_parameter['device'])
+
+            elif self.algorithm == 'CNN_1D':
+                model = CNN_1D(input_channels = input_size,
+                                output_channels = self.alg_parameter['output_channels'],
+                                kernel_size = self.alg_parameter['kernel_size'],
+                                stride = self.alg_parameter['stride'],
+                                padding = self.alg_parameter['padding'],
+                                drop_out = self.alg_parameter['drop_out'],
+                                num_classes = num_classes
+                                )
+
+        if self.with_representation == True:
+            if self.algorithm == 'FC_Layer':
+                model = FC_Layer(representation_size = self.alg_parameter['representation_size'],
+                                drop_out = self.alg_parameter['drop_out'],
+                                num_classes = num_classes,
+                                bias = self.alg_parameter['bias']
+                                )
+
+        # 모델 gpu 올리고, dataloader를 생성
         model = model.to(self.alg_parameter['device'])
-        train_loader, valid_loader, test_loader = create_classification_dataset(self.alg_parameter['window_size'], self.alg_parameter['data_dir'], 
+        train_loader, valid_loader, test_loader = create_classification_dataset(self.alg_parameter['window_size'], self.train_x, self.train_y, self.test_x, self.test_y, 
                                                                                 self.alg_parameter['batch_size'])
         dataloaders_dict = {'train': train_loader, 'val': valid_loader}
         criterion = nn.CrossEntropyLoss()

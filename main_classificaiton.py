@@ -7,7 +7,7 @@ warnings.filterwarnings('ignore')
 
 
 class Classification():
-    def __init__(self, config):
+    def __init__(self, config, train_x, train_y, test_x, test_y):
         """
         :param config: config 
         :type config: dictionary
@@ -34,7 +34,11 @@ class Classification():
             
         """
         self.config = config
-        
+        self.train_x = train_x
+        self.train_y = train_y
+        self.test_x = test_x
+        self.test_y = test_y
+
 
     def getResult(self):
         """
@@ -42,11 +46,18 @@ class Classification():
         return: test set accuracy
         rtype: float
         """
-        
+
         # Classification
-        Classifier = Train_Test(self.config)
+        # if with_representation == 'False':
+            # if self.config['algorithm'] == 'RNN' | 'LSTM' | 'GRU':
+           #    RNN_Train_test
+        #    elif self.config['algorithm']
+
+
+        Classifier = Train_Test(self.config, self.train_x, self.train_y, self.test_x, self.test_y)
         test_accuracy = Classifier.get_accuracy()
         test_accuracy = test_accuracy.detach().cpu().numpy()
 
 
         return test_accuracy
+
