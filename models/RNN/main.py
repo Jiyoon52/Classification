@@ -94,7 +94,7 @@ class RNN_fit():
             else:
                 print('Please check out our chosen model')
         else:
-            print('Please Check whether representation rules are used')
+            print('Please check whether representation rules are used')
             
         # 모델 gpu 올리고, dataloader를 생성
         model = model.to(self.parameter['device'])
