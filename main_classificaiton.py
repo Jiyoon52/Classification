@@ -1,13 +1,16 @@
-# from models.RNN import RNN_model
-# from models.CNN import CNN_model
+from models.CNN.main import *
+from models.RNN.main import *
+from models.FC_Layer.main import *
 
-from train_model import Train_Test
+import numpy as np
+import torch
+
 import warnings
 warnings.filterwarnings('ignore')
 
 
 class Classification():
-    def __init__(self, config, train_x, train_y, test_x, test_y):
+    def __init__(self, config, train_data, test_data):
         """
         :param config: config 
         :type config: dictionary
@@ -16,9 +19,9 @@ class Classification():
                     # Case 1. w/o data representation & LSTM model 
                     config1 = {
                             'with_representation': False, # classification에 사용되는 representation이 있을 경우 True, 아닐 경우 False
-                            'algorithm': 'LSTM', # classification에에 활용할 알고리즘 정의, {'RNN', 'LSTM', 'GRU', 'CONV_1D', 'FC_layer'} 중 택 1
+                            'model': 'LSTM', # classification에에 활용할 알고리즘 정의, {'RNN', 'LSTM', 'GRU', 'CONV_1D', 'FC_layer'} 중 택 1
 
-                            'alg_parameter': {
+                            'parameter': {
                                 'window_size' : 50, # input time series data를 windowing 하여 자르는 길이(size)
                                 'num_layers' : 2, # recurrnet layers의 수, Default : 1
                                 'hidden_size' : 64, # hidden state의 벡터차원 수
@@ -34,30 +37,112 @@ class Classification():
             
         """
         self.config = config
-        self.train_x = train_x
-        self.train_y = train_y
-        self.test_x = test_x
-        self.test_y = test_y
+        self.train_data = train_data
+        self.test_data = test_data
+        
+        self.input_size = self.train_data['x'].shape[1]
+        self.num_classes = len(np.unique(self.train_data['y']))
+        
+        self.model = config['model']
+        self.parameter = config['parameter']
+        self.with_representation = config['with_representation']
+
+        self.train_loader, self.valid_loader, self.test_loader = self.get_loaders(train_data = self.train_data, 
+                                                                                  test_data = self.test_data,
+                                                                                  window_size = self.parameter['window_size'],
+                                                                                  batch_size=  self.parameter['batch_size'],
+                                                                                  with_representation = self.with_representation)
 
 
     def getResult(self):
         """
-        getResult by classification algorithm and data representation
+        getResult by classification model and data representation
         return: test set accuracy
         rtype: float
         """
+        if self.with_representation == False:
+            if self.model == 'RNN':
+                result = self.RNN()
+            elif self.model == 'LSTM':
+                result = self.RNN()
+            elif self.model == 'GRU':
+                result = self.RNN() 
+            elif self.model == 'CNN_1D':
+                result = self.CNN_1D()
+            else:
+                print('Set using model')
 
-        # Classification
-        # if with_representation == 'False':
-            # if self.config['algorithm'] == 'RNN' | 'LSTM' | 'GRU':
-           #    RNN_Train_test
-        #    elif self.config['algorithm']
+        elif self.with_representation == True:
+            if self.model == 'FC':
+                result = self.FC()
+            else:
+                print('Set using model')
+        
+        return result
 
+    def RNN(self):
+        RNN = RNN_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        best_model = RNN.train_RNN()
+        result_acc = RNN.test_RNN(best_model)
+        return result_acc
+    
+    def CNN_1D(self):
+        CNN_1D = CNN_1D_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        best_model = CNN_1D.train_CNN_1D()
+        result_acc = CNN_1D.test_CNN_1D(best_model)
+        return result_acc
 
-        Classifier = Train_Test(self.config, self.train_x, self.train_y, self.test_x, self.test_y)
-        test_accuracy = Classifier.get_accuracy()
-        test_accuracy = test_accuracy.detach().cpu().numpy()
+    def FC(self):
+        FC = FC_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        best_model = FC.train_FC()
+        result_acc = FC.test_FC(best_model)
+        return result_acc
+    
+    def get_loaders(self, train_data, test_data, window_size, batch_size, with_representation):
+        # data_dir에 있는 train/test 데이터 불러오기
+        x = train_data['x']
+        y = train_data['y']
+        x_test = test_data['x']
+        y_test = test_data['y']
+        
+        # train data를 시간순으로 8:2의 비율로 train/validation set으로 분할
+        n_train = int(0.8 * len(x))
+        n_valid = len(x) - n_train
+        n_test = len(x_test)
+        x_train, y_train = x[:n_train], y[:n_train]
+        x_valid, y_valid = x[n_train:], y[n_train:]
+    
+        # train/validation/test 데이터를 window_size 시점 길이로 분할
+        datasets = []
+        for set in [(x_train, y_train, n_train), (x_valid, y_valid, n_valid), (x_test, y_test, n_test)]:
+            
+            if with_representation == False:
+                T = set[0].shape[-1]
+                windows = np.split(set[0][:, :, :window_size * (T // window_size)], (T // window_size), -1)
+                windows = np.concatenate(windows, 0)
+                labels = np.split(set[1][:, :window_size * (T // window_size)], (T // window_size), -1)
+                labels = np.round(np.mean(np.concatenate(labels, 0), -1))
+                datasets.append(torch.utils.data.TensorDataset(torch.Tensor(windows), torch.Tensor(labels)))
 
+            elif with_representation == True:
+                T = set[0].shape[-1]
+                windows = np.split(set[0][:, :, :window_size * (T // window_size)], (T // window_size), -1)
+                windows = np.concatenate(windows, 0)
+                labels = np.split(set[1][:, :window_size * (T // window_size)], (T // window_size), -1)
+                labels = np.round(np.mean(np.concatenate(labels, 0), -1))
+                # 나중에 input_representation을 직접 사용 (representation = input_representation)으로 해서 넣음 (예를 들어 80 by 20)
+                representation_size = 20 # 임의로 설정
+                representation = []
+                for i in range((windows.shape[0])):
+                    representation_temp = np.random.rand(representation_size)
+                    representation.append(representation_temp)
+                representation = np.array(representation)
+                datasets.append(torch.utils.data.TensorDataset(torch.Tensor(representation), torch.Tensor(labels)))
 
-        return test_accuracy
+        # train/validation/test DataLoader 구축
+        trainset, validset, testset = datasets[0], datasets[1], datasets[2]
+        train_loader = torch.utils.data.DataLoader(trainset, batch_size=batch_size, shuffle=True)
+        valid_loader = torch.utils.data.DataLoader(validset, batch_size=batch_size, shuffle=True)
+        test_loader = torch.utils.data.DataLoader(testset, batch_size=batch_size, shuffle=True)
 
+        return train_loader, valid_loader, test_loader  

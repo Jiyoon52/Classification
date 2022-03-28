@@ -3,12 +3,13 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from models.train_model import Train_Test
 
 
 
-class FC_Layer(nn.Module):
+class FC(nn.Module):
     def __init__(self, drop_out, num_classes, bias):
-        super(FC_Layer, self).__init__()
+        super(FC, self).__init__()
         self.fc = nn.Linear(20, num_classes, bias = bias)
         self.layer = nn.Sequential(
             self.fc,
@@ -20,3 +21,48 @@ class FC_Layer(nn.Module):
         x = self.layer(x)
 
         return x
+
+
+class FC_fit():
+    def __init__(self, config, train_loader, valid_loader, test_loader, input_size, num_classes):
+        self.config = config
+        self.train_loader = train_loader
+        self.valid_loader = valid_loader
+        self.test_loader = test_loader
+        self.input_size = input_size
+        self.num_classes = num_classes
+
+        self.with_representation = config['with_representation']
+        self.model = self.config['model']
+        self.parameter = self.config['parameter']
+        
+        
+    def train_FC(self):
+        # representation feauture 유무 및 사용 알고리즘 모델 선언
+        if self.with_representation == True:
+            if self.model == 'FC':
+                model = FC(drop_out = self.parameter['drop_out'],
+                           num_classes = self.num_classes,
+                           bias = self.parameter['bias']
+                           )
+            else:
+                print('Please check out our chosen model')
+        else:
+            print('Please Check whether representation rules are used')
+            
+        # 모델 gpu 올리고, dataloader를 생성
+        model = model.to(self.parameter['device'])
+        dataloaders_dict = {'train': self.train_loader, 'val': self.valid_loader}
+        criterion = nn.CrossEntropyLoss()
+        optimizer=optim.Adam(model.parameters(), lr=0.0001)
+        
+        trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        
+        best_model, val_acc_history = trainer.train(model, dataloaders_dict, criterion, self.parameter['num_epochs'], optimizer)
+        return best_model
+        
+    def test_FC(self, best_model):
+        # 모델 gpu 올리고, dataloader를 생성
+        trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        test_accuracy = trainer.test(best_model, self.test_loader)
+        return test_accuracy
