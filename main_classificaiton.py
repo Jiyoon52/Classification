@@ -53,7 +53,6 @@ class Classification():
                                                                                   batch_size=  self.parameter['batch_size'],
                                                                                   with_representation = self.with_representation)
 
-
     def getResult(self):
         """
         getResult by classification model and data representation
@@ -76,7 +75,7 @@ class Classification():
             if self.model == 'FC':
                 result = self.FC()
             else:
-                print('Set using model')
+                print('Please define which model to use')
         
         return result
 
