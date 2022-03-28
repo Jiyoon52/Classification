@@ -4,7 +4,7 @@ from models.CNN.main import CNN_1D
 from models.RNN.main import RNN_model
 from models.FC_Layer.main import FC_Layer
 
-from dataloader import create_classification_dataset
+from dataloader import create_classification_dataset, create_representation_dataset
 import numpy as np
 
 import torch
@@ -105,7 +105,7 @@ class Train_Test():
         input_size = (self.train_x).shape[1]
         num_classes = len(np.unique(self.train_y))
 
-        # representation feauture 유무 및 사용 알고리즘 모델 선언
+        # representation feauture 미사용 및 사용 알고리즘 모델 선언
         if self.with_representation == False:
             if self.algorithm == 'RNN':
                 model = RNN_model(input_size = input_size, 
@@ -144,24 +144,35 @@ class Train_Test():
                                 drop_out = self.alg_parameter['drop_out'],
                                 num_classes = num_classes
                                 )
+                                
+            # 모델 gpu 올리고, dataloader를 생성
+            model = model.to(self.alg_parameter['device'])
+            train_loader, valid_loader, test_loader = create_classification_dataset(self.alg_parameter['window_size'], self.train_x, self.train_y, self.test_x, self.test_y, 
+                                                                                    self.alg_parameter['batch_size'])
+            dataloaders_dict = {'train': train_loader, 'val': valid_loader}
+            criterion = nn.CrossEntropyLoss()
+            optimizer=optim.Adam(model.parameters(), lr=0.0001)
+            best_model, val_acc_history = self.train(model, dataloaders_dict, criterion, self.alg_parameter['num_epochs'], optimizer)
+            test_accuracy = self.test(best_model, test_loader)
 
+        # representation feauture 사용 및 사용 알고리즘 모델 선언
         if self.with_representation == True:
             if self.algorithm == 'FC_Layer':
-                model = FC_Layer(representation_size = self.alg_parameter['representation_size'],
-                                drop_out = self.alg_parameter['drop_out'],
+                model = FC_Layer(drop_out = self.alg_parameter['drop_out'],
                                 num_classes = num_classes,
                                 bias = self.alg_parameter['bias']
                                 )
 
-        # 모델 gpu 올리고, dataloader를 생성
-        model = model.to(self.alg_parameter['device'])
-        train_loader, valid_loader, test_loader = create_classification_dataset(self.alg_parameter['window_size'], self.train_x, self.train_y, self.test_x, self.test_y, 
-                                                                                self.alg_parameter['batch_size'])
-        dataloaders_dict = {'train': train_loader, 'val': valid_loader}
-        criterion = nn.CrossEntropyLoss()
-        optimizer=optim.Adam(model.parameters(), lr=0.0001)
-        best_model, val_acc_history = self.train(model, dataloaders_dict, criterion, self.alg_parameter['num_epochs'], optimizer)
-        test_accuracy = self.test(best_model, test_loader)
+            # 모델 gpu 올리고, dataloader를 생성
+            model = model.to(self.alg_parameter['device'])
+            train_loader, valid_loader, test_loader = create_representation_dataset(self.alg_parameter['window_size'], self.train_x, self.train_y, self.test_x, self.test_y, 
+                                                                                    self.alg_parameter['batch_size'], self.alg_parameter['input_representation'])
+            dataloaders_dict = {'train': train_loader, 'val': valid_loader}
+            criterion = nn.CrossEntropyLoss()
+            optimizer=optim.Adam(model.parameters(), lr=0.0001)
+            best_model, val_acc_history = self.train(model, dataloaders_dict, criterion, self.alg_parameter['num_epochs'], optimizer)
+            test_accuracy = self.test(best_model, test_loader)
+
 
         return test_accuracy
 

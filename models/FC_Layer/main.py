@@ -7,9 +7,9 @@ import torch.optim as optim
 
 
 class FC_Layer(nn.Module):
-    def __init__(self, representation, drop_out, num_classes, bias):
+    def __init__(self, drop_out, num_classes, bias):
         super(FC_Layer, self).__init__()
-        self.fc = nn.Linear(30, num_classes, bias = bias)
+        self.fc = nn.Linear(20, num_classes, bias = bias)
         self.layer = nn.Sequential(
             self.fc,
             nn.ReLU(),
@@ -17,7 +17,6 @@ class FC_Layer(nn.Module):
         )
 
     def forward(self, x):
-        print(x.shape)
         x = self.layer(x)
 
         return x
