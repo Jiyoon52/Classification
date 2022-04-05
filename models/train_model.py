@@ -30,8 +30,9 @@ class Train_Test():
         best_acc = 0.0
 
         for epoch in range(num_epochs):
-            print('Epoch {}/{}'.format(epoch + 1, num_epochs))
-            print('-' * 10)
+            if (epoch + 1) % 5 == 1:
+                print()
+                print('Epoch {}/{}'.format(epoch + 1, num_epochs))
 
             # 각 epoch마다 순서대로 training과 validation을 진행
             for phase in ['train', 'val']:
@@ -76,7 +77,8 @@ class Train_Test():
                 epoch_loss = running_loss / running_total
                 epoch_acc = running_corrects.double() / running_total
 
-                print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
+                if (epoch + 1) % 5 == 1:
+                    print('{} Loss: {:.4f} Acc: {:.4f}'.format(phase, epoch_loss, epoch_acc))
 
                 # validation 단계에서 validation loss가 감소할 때마다 best model 가중치를 업데이트함
                 if phase == 'val' and epoch_acc > best_acc:
@@ -85,7 +87,6 @@ class Train_Test():
                 if phase == 'val':
                     val_acc_history.append(epoch_acc)
 
-            print()
 
         # 전체 학습 시간 계산
         time_elapsed = time.time() - since
@@ -106,6 +107,8 @@ class Train_Test():
         with torch.no_grad():
             corrects = 0
             total = 0
+            preds = []
+            probs = []
             for inputs, labels in test_loader:
                 inputs = inputs.to(self.parameter['device'])
                 labels = labels.to(self.parameter['device'], dtype=torch.long)
@@ -113,17 +116,25 @@ class Train_Test():
                 # forward
                 # input을 model에 넣어 output을 도출
                 outputs = model(inputs)
+                prob = outputs
 
                 # output 중 최댓값의 위치에 해당하는 class로 예측을 수행
-                _, preds = torch.max(outputs, 1)
-
+                _, pred = torch.max(outputs, 1)
+                
                 # batch별 정답 개수를 축적함
-                corrects += torch.sum(preds == labels.data)
+                corrects += torch.sum(pred == labels.data)
                 total += labels.size(0)
 
-        # accuracy를 도출함
-        test_acc = corrects.double() / total
-        test_acc = test_acc.detach().cpu().numpy()
+                preds.extend(pred.detach().cpu().numpy())
+                probs.extend(prob.detach().cpu().numpy())
+
+            preds = np.array(preds)
+            probs = np.array(probs)
+            # result = {'preds' : preds, 'probs' : probs}
+        
+        # test_acc = corrects.double() / total
+        # test_acc = test_acc.detach().cpu().numpy()
         # print('Testing Acc: {:.4f}'.format(test_acc))       
-        return test_acc
+       
+        return preds, probs
     
