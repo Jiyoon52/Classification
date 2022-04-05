@@ -96,7 +96,6 @@ class RNN_fit():
         else:
             print('Please check whether representation rules are used')
             
-        # 모델 gpu 올리고, dataloader를 생성
         model = model.to(self.parameter['device'])
         dataloaders_dict = {'train': self.train_loader, 'val': self.valid_loader}
         criterion = nn.CrossEntropyLoss()
@@ -108,8 +107,8 @@ class RNN_fit():
         return best_model
         
     def test_RNN(self, best_model):
-        # 모델 gpu 올리고, dataloader를 생성
         trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
-        test_accuracy = trainer.test(best_model, self.test_loader)
-        return test_accuracy
+        result = trainer.test(best_model, self.test_loader)
+
+        return result
     

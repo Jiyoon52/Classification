@@ -12,19 +12,19 @@ class CNN_1D(nn.Module):
         super(CNN_1D, self).__init__()
         # 첫 번째 1-dimensional convolution layer 구축
         self.layer1 = nn.Sequential(
-            nn.Conv1d(input_channels, 64, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.Conv1d(input_channels, 32, kernel_size = kernel_size, stride = stride, padding = padding),
             nn.ReLU(),
             nn.AvgPool1d(2)
         )
         # 두 번째 1-dimensional convolution layer 구축
         self.layer2 = nn.Sequential(
-            nn.Conv1d(64, output_channels, kernel_size = kernel_size, stride = stride, padding = padding),
+            nn.Conv1d(32, output_channels, kernel_size = kernel_size, stride = stride, padding = padding),
             nn.ReLU(),
             nn.AvgPool1d(2)
         )
         # fully-connected layer 구축
         self.dropout = nn.Dropout(drop_out)
-        self.fc = nn.Linear(output_channels * 11, num_classes) # 이부분은 hyperparameter에 따라 계산을 해줘야 함
+        self.fc = nn.Linear(output_channels * 30, num_classes) # 이부분은 hyperparameter에 따라 계산을 해줘야 함
 
     def forward(self, x):
         x = self.layer1(x)
@@ -65,7 +65,6 @@ class CNN_1D_fit():
         else:
             print('Please Check whether representation rules are used')
             
-        # 모델 gpu 올리고, dataloader를 생성
         model = model.to(self.parameter['device'])
         dataloaders_dict = {'train': self.train_loader, 'val': self.valid_loader}
         criterion = nn.CrossEntropyLoss()
@@ -77,7 +76,7 @@ class CNN_1D_fit():
         return best_model
         
     def test_CNN_1D(self, best_model):
-        # 모델 gpu 올리고, dataloader를 생성
         trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
-        test_accuracy = trainer.test(best_model, self.test_loader)
-        return test_accuracy
+        result = trainer.test(best_model, self.test_loader)
+        
+        return result
