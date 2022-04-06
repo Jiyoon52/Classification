@@ -117,7 +117,8 @@ class Train_Test():
                 # input을 model에 넣어 output을 도출
                 outputs = model(inputs)
                 prob = outputs
-
+                prob = nn.Softmax(dim=1)(prob)
+                
                 # output 중 최댓값의 위치에 해당하는 class로 예측을 수행
                 _, pred = torch.max(outputs, 1)
                 
