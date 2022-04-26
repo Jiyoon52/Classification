@@ -132,6 +132,14 @@ class Train_Test():
 
             preds = np.array(preds)
             probs = np.array(probs)
+<<<<<<< HEAD
+=======
+            # result = {'preds' : preds, 'probs' : probs}
+        
+        # test_acc = corrects.double() / total
+        # test_acc = test_acc.detach().cpu().numpy()
+        # print('Testing Acc: {:.4f}'.format(test_acc))       
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
        
         return preds, probs
     
