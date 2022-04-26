@@ -14,7 +14,15 @@ import torch.optim as optim
 import pickle
 import os
 import random
+<<<<<<< HEAD
 from sklearn.metrics import classification_report
+=======
+<<<<<<< HEAD
+from sklearn.metrics import classification_report
+=======
+
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 #%%
 
 # seed 고정
@@ -29,6 +37,10 @@ random.seed(random_seed)
 
 #%%
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 # Case 1. w/o data representation & LSTM model 
 config1 = {
         'with_representation': False, # classification에 사용되는 representation이 있을 경우 True, 아닐 경우 False
@@ -69,11 +81,28 @@ config2 = {
 config3 = {
         'with_representation': False, # classification에 사용되는 representation이 있을 경우 True, 아닐 경우 False
         'model': 'CNN_1D', # classification에에 활용할 알고리즘 정의, {'LSTM', 'GRU', 'CNN_1D', 'LSTM_FCNs', 'FC_layer'} 중 택 1
+<<<<<<< HEAD
+=======
+=======
+# Case 4. w/o data representation & CNN_1D model 
+config4 = {
+        'with_representation': False, # classification에 사용되는 representation이 있을 경우 True, 아닐 경우 False
+        'model': 'CNN_1D', # classification에에 활용할 알고리즘 정의, {'RNN', 'LSTM', 'GRU', 'CNN_1D', 'FC_layer'} 중 택 1
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 
         'parameter': {
             'window_size' : 128, # input time series data를 windowing 하여 자르는 길이(size)
             'output_channels' : 64, # convolution channel size of output
+<<<<<<< HEAD
             'drop_out' : 0.1, # If non-zero, introduces a Dropout layer on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout. Default: 0
+=======
+<<<<<<< HEAD
+            'drop_out' : 0.1, # If non-zero, introduces a Dropout layer on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout. Default: 0
+=======
+            'drop_out' : 0.2, # If non-zero, introduces a Dropout layer on the outputs of each RNN layer except the last layer, with dropout probability equal to dropout. Default: 0
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
             'kernel_size' : 3, # convolutional filter size
             'stride' : 1, # stride of the convolution. Default = 1 
             'padding' : 0, # padding added to both sides of the input. Default = 0
@@ -83,6 +112,10 @@ config3 = {
             }
 }
 
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 # Case 4. w/o data representation & LSTM_FCNs model 
 config4 = {
         'with_representation': False, # classification에 사용되는 representation이 있을 경우 True, 아닐 경우 False
@@ -116,6 +149,12 @@ config5 = {
 
 #%%
 # Raw data 
+<<<<<<< HEAD
+=======
+=======
+#%%
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 data_dir = './data'
 
 train_x = pickle.load(open(os.path.join(data_dir, 'X_train.pkl'), 'rb'))
@@ -127,6 +166,10 @@ train_data = {'x' : train_x, 'y' : train_y}
 test_data = {'x' : test_x, 'y' : test_y}
 
 print(train_x.shape)  #shape : (num_of_instance x input_dims x window_size) = (7352, 9, 128)
+<<<<<<< HEAD
+=======
+<<<<<<< HEAD
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
 print(train_y.shape) #shape : (num_of_instance) = (7352, )
 print(test_x.shape)  #shape : (num_of_instance x input_dims x window_size) = (2947, 9, 128)
 print(test_y.shape)  #shape : (num_of_instance) = (2947, )
@@ -149,3 +192,22 @@ print(pred[:5]) # shape : (2947, )
 print(prob[:5]) # shape : (2947, 6)
 
 print(pd.DataFrame(classification_report(test_data['y'], pred, output_dict=True)))
+<<<<<<< HEAD
+=======
+=======
+print(train_y.shape) #shape : (num_of_instance x input_dims x window_size) = (7352, )
+print(test_x.shape)  #shape : (num_of_instance x input_dims x window_size) = (2947, 9, 128)
+print(test_y.shape)  #shape : (num_of_instance x input_dims x window_size) = (2947)
+
+#%%
+
+# Case 4. w/o data representation & CNN_1D
+config = config4
+data_classification = mc.Classification(config, train_data, test_data)
+
+train_loader, valid_loader, test_loader = data_classification.get_loaders( train_data, test_data, 128, 64, False)
+txt, labels = next(iter(train_loader))
+
+pred, prob = data_classification.getResult()
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481

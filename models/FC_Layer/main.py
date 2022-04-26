@@ -64,7 +64,15 @@ class FC_fit():
         return best_model
         
     def test_FC(self, best_model):
+<<<<<<< HEAD
         trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.representation_size, self.num_classes)
+=======
+<<<<<<< HEAD
+        trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.representation_size, self.num_classes)
+=======
+        trainer = Train_Test(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
         result = trainer.test(best_model, self.test_loader)
         
         return result

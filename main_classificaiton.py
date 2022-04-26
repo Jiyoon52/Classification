@@ -94,6 +94,15 @@ class Classification():
         best_model = CNN_1D.train_CNN_1D()
         result = CNN_1D.test_CNN_1D(best_model)
         return result
+<<<<<<< HEAD
+
+    def LSTM_FCNs(self):
+        LSTM_FCNs = LSTM_FCNs_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        best_model = LSTM_FCNs.train_LSTM_FCNs()
+        result = LSTM_FCNs.test_LSTM_FCNs(best_model)
+        return result
+=======
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
 
     def LSTM_FCNs(self):
         LSTM_FCNs = LSTM_FCNs_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
@@ -141,8 +150,27 @@ class Classification():
                 datasets.append(torch.utils.data.TensorDataset(torch.Tensor(windows), torch.Tensor(labels)))
 
             elif with_representation == True:
+<<<<<<< HEAD
                 labels = set[1] # 묶여있는 window 관측치 하나마다 y_label 값이 하나씩 달려있는 dataset 이므로
                 representation = set[0]
+=======
+<<<<<<< HEAD
+                labels = set[1] # 묶여있는 window 관측치 하나마다 y_label 값이 하나씩 달려있는 dataset 이므로
+                representation = set[0]
+=======
+                T = set[0].shape[-1]
+                windows = np.split(set[0][:, :, :window_size * (T // window_size)], (T // window_size), -1)
+                windows = np.concatenate(windows, 0)
+                labels = set[1] # 묶여있는 window 관측치 하나마다 y_label 값이 하나씩 달려있는 dataset 이므로
+                
+                # 나중에 input_representation을 직접 사용 (representation = input_representation)으로 해서 넣음 (예를 들어 80 by 20)
+                representation_size = 20 # 임의로 설정
+                representation = []
+                for i in range((windows.shape[0])):
+                    representation_temp = np.random.rand(representation_size)
+                    representation.append(representation_temp)
+>>>>>>> d07f8f2287b498aaaec882ee2bd4ea0095340b9b
+>>>>>>> 360090b9b0d0ee87ffcf77271712b958eba53481
                 representation = np.array(representation)
                 datasets.append(torch.utils.data.TensorDataset(torch.Tensor(representation), torch.Tensor(labels)))
 
