@@ -49,7 +49,8 @@ class Train_Test():
                 for inputs, labels in dataloaders[phase]:
                     inputs = inputs.to(self.parameter['device'])
                     labels = labels.to(self.parameter['device'], dtype=torch.long)
-
+                    # seq_lens = seq_lens.to(self.parameter['device'])
+                    
                     # parameter gradients를 0으로 설정
                     optimizer.zero_grad()
 
@@ -117,7 +118,8 @@ class Train_Test():
                 # input을 model에 넣어 output을 도출
                 outputs = model(inputs)
                 prob = outputs
-
+                prob = nn.Softmax(dim=1)(prob)
+                
                 # output 중 최댓값의 위치에 해당하는 class로 예측을 수행
                 _, pred = torch.max(outputs, 1)
                 
@@ -130,11 +132,6 @@ class Train_Test():
 
             preds = np.array(preds)
             probs = np.array(probs)
-            result = {'preds' : preds, 'probs' : probs}
-        
-        # test_acc = corrects.double() / total
-        # test_acc = test_acc.detach().cpu().numpy()
-        # print('Testing Acc: {:.4f}'.format(test_acc))       
        
-        return result
+        return preds, probs
     
