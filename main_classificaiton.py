@@ -1,7 +1,7 @@
 from models.CNN.main import *
 from models.RNN.main import *
 from models.FC_Layer.main import *
-
+from models.LSTM_FCNs.main import *
 import numpy as np
 import torch
 
@@ -40,12 +40,16 @@ class Classification():
         self.train_data = train_data
         self.test_data = test_data
         
+        self.with_representation = config['with_representation']
         self.input_size = self.train_data['x'].shape[1]
+        if self.with_representation == True:
+            self.representation_size = self.train_data['x'].shape[1]
+        
         self.num_classes = len(np.unique(self.train_data['y']))
         
         self.model = config['model']
         self.parameter = config['parameter']
-        self.with_representation = config['with_representation']
+        
 
         self.train_loader, self.valid_loader, self.test_loader = self.get_loaders(train_data = self.train_data, 
                                                                                   test_data = self.test_data,
@@ -60,8 +64,8 @@ class Classification():
         rtype: float
         """
         if self.with_representation == False:
-            if self.model == 'RNN':
-                result = self.RNN()
+            if self.model == 'LSTM_FCNs':
+                result = self.LSTM_FCNs()
             elif self.model == 'LSTM':
                 result = self.RNN()
             elif self.model == 'GRU':
@@ -69,13 +73,13 @@ class Classification():
             elif self.model == 'CNN_1D':
                 result = self.CNN_1D()
             else:
-                print('Set using model')
+                print('Choose the model to use')
 
         elif self.with_representation == True:
             if self.model == 'FC':
                 result = self.FC()
             else:
-                print('Please define which model to use')
+                print('Define which model to use')
         
         return result
 
@@ -91,8 +95,14 @@ class Classification():
         result = CNN_1D.test_CNN_1D(best_model)
         return result
 
+    def LSTM_FCNs(self):
+        LSTM_FCNs = LSTM_FCNs_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        best_model = LSTM_FCNs.train_LSTM_FCNs()
+        result = LSTM_FCNs.test_LSTM_FCNs(best_model)
+        return result
+
     def FC(self):
-        FC = FC_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.input_size, self.num_classes)
+        FC = FC_fit(self.config, self.train_loader, self.valid_loader, self.test_loader, self.representation_size, self.num_classes)
         best_model = FC.train_FC()
         result = FC.test_FC(best_model)
         return result
@@ -103,7 +113,16 @@ class Classification():
         y = train_data['y']
         x_test = test_data['x']
         y_test = test_data['y']
-
+        
+        if np.min(y)!= 0:
+            min_num = np.min(y)
+            print('Set y values to zero')
+            y = y - min_num
+            y_test = y_test - min_num
+            
+        else:
+            pass
+                 
         # train data를 시간순으로 8:2의 비율로 train/validation set으로 분할
         n_train = int(0.8 * len(x))
         n_valid = len(x) - n_train
@@ -122,17 +141,8 @@ class Classification():
                 datasets.append(torch.utils.data.TensorDataset(torch.Tensor(windows), torch.Tensor(labels)))
 
             elif with_representation == True:
-                T = set[0].shape[-1]
-                windows = np.split(set[0][:, :, :window_size * (T // window_size)], (T // window_size), -1)
-                windows = np.concatenate(windows, 0)
                 labels = set[1] # 묶여있는 window 관측치 하나마다 y_label 값이 하나씩 달려있는 dataset 이므로
-                
-                # 나중에 input_representation을 직접 사용 (representation = input_representation)으로 해서 넣음 (예를 들어 80 by 20)
-                representation_size = 20 # 임의로 설정
-                representation = []
-                for i in range((windows.shape[0])):
-                    representation_temp = np.random.rand(representation_size)
-                    representation.append(representation_temp)
+                representation = set[0]
                 representation = np.array(representation)
                 datasets.append(torch.utils.data.TensorDataset(torch.Tensor(representation), torch.Tensor(labels)))
 
